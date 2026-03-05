@@ -92,12 +92,14 @@ For **pve1**:
 |---|---|
 | Management Interface | `eno1` (the Intel Ethernet port) |
 | Hostname (FQDN) | `pve1.homelab.local` |
-| IP Address | `192.168.1.101` |
-| Netmask | `255.255.255.0` |
+| IP Address | `192.168.1.101/24` (enter with the `/24` suffix) |
+| Netmask | `24` (CIDR prefix — **not** `255.255.255.0`) |
 | Gateway | `192.168.1.1` (your router's IP) |
 | DNS Server | `192.168.1.1` (your router, or use `1.1.1.1`) |
 
-> **Note**: Adjust `192.168.1.1` if your router uses a different subnet (e.g., `10.0.0.1`).
+> **Note**: The installer expects the netmask as a CIDR prefix number (`24`), not dotted decimal (`255.255.255.0`). Some versions of the installer combine the IP and mask into one field — if so, enter `192.168.1.101/24`.
+>
+> **To confirm your subnet**: Run `ipconfig` on your Windows PC and note the Subnet Mask under your active adapter. `255.255.255.0` = `/24`. Adjust `192.168.1.1` if your AT&T gateway uses a different subnet.
 
 **Summary screen** → Review everything, then click **Install**
 
@@ -178,11 +180,11 @@ Repeat Steps 3–6 for pve2 and pve3, **using different IPs and hostnames**:
 
 **For pve2:**
 - Hostname: `pve2.homelab.local`
-- IP Address: `192.168.1.102`
+- IP Address: `192.168.1.102/24`
 
 **For pve3:**
 - Hostname: `pve3.homelab.local`
-- IP Address: `192.168.1.103`
+- IP Address: `192.168.1.103/24`
 
 Use the same root password on all 3 nodes (required for cluster joining later).
 
