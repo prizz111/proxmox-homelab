@@ -22,7 +22,7 @@ The HP EliteDesk 800 G5 Desktop Mini is an ideal choice — compact, quiet, powe
 | OS Drive | M.2 NVMe SSD (existing, per node) |
 | Data Drive | 2.5" SATA HDD (purchased separately, per node) |
 | Network | Intel I219-LM 1GbE (per node) |
-| Switch | UniFi Flex Mini (managed, VLAN-capable) |
+| Switch | Managed switch (VLAN-capable) |
 
 ---
 
@@ -36,11 +36,11 @@ The HP EliteDesk 800 G5 Desktop Mini is an ideal choice — compact, quiet, powe
                                         │ secure tunnel
                                         │
                               ┌─────────▼──────────┐
-                              │  AT&T BGW320 Gateway │
+                              │   Home Router/ISP   │
                               └─────────┬──────────┘
                                         │
                               ┌─────────▼──────────┐
-                              │  UniFi Flex Mini    │
+                              │   Managed Switch    │
                               │  VLAN 1 (mgmt/VMs) │
                               │  VLAN 10 (cluster) │
                               └──┬──────┬──────┬───┘
@@ -49,10 +49,10 @@ The HP EliteDesk 800 G5 Desktop Mini is an ideal choice — compact, quiet, powe
                      │              │                   │
               ┌──────▼─────┐ ┌──────▼─────┐ ┌──────────▼──┐
               │    pve1    │ │    pve2    │ │    pve3     │
-              │192.168.1.101│ │192.168.1.102│ │192.168.1.103│
+              │192.168.1.11 │ │192.168.1.12 │ │192.168.1.13 │
               │            │ │            │ │             │
               │  [Immich]  │ │            │ │             │
-              │  VM        │ │            │ │             │
+              │  VM/LXC    │ │            │ │             │
               └──────┬─────┘ └────────────┘ └─────────────┘
                      │
               ┌──────▼─────┐
@@ -73,9 +73,9 @@ The HP EliteDesk 800 G5 Desktop Mini is an ideal choice — compact, quiet, powe
 
 | Host | Hostname | Management IP | Cluster IP | Tailscale IP |
 |---|---|---|---|---|
-| Node 1 | pve1.homelab.local | 192.168.1.101 | 10.10.10.1 | assigned by Tailscale |
-| Node 2 | pve2.homelab.local | 192.168.1.102 | 10.10.10.2 | assigned by Tailscale |
-| Node 3 | pve3.homelab.local | 192.168.1.103 | 10.10.10.3 | assigned by Tailscale |
+| Node 1 | pve1.homelab.local | 192.168.1.11 | 10.10.10.1 | assigned by Tailscale |
+| Node 2 | pve2.homelab.local | 192.168.1.12 | 10.10.10.2 | assigned by Tailscale |
+| Node 3 | pve3.homelab.local | 192.168.1.13 | 10.10.10.3 | assigned by Tailscale |
 | Immich VM | immich.homelab.local | 192.168.1.110 | — | assigned by Tailscale |
 
 > **Note**: Adjust `192.168.1.x` to match your router's subnet if needed.
@@ -103,8 +103,7 @@ Follow these guides in sequence:
 |---|---|
 | Hardware Prep (all 3 nodes) | 45–60 min |
 | Proxmox Installation (all 3 nodes) | 60–90 min |
-| Switch Setup | 30–45 min |
-| Network Configuration | 20–30 min |
+| Network Configuration | 30–45 min |
 | Cluster Setup | 20–30 min |
 | Storage Setup | 20–30 min |
 | Tailscale Setup | 15–20 min |
@@ -117,6 +116,6 @@ Follow these guides in sequence:
 
 - USB drive (8GB+) for the Proxmox installer
 - A Windows or Linux computer to create the bootable USB
+- Your managed switch's admin panel accessible
 - Internet connection during setup (for package downloads)
-- A free Ubiquiti account (create at account.ui.com before starting guide 03.1)
 - A free Tailscale account (create at tailscale.com before starting guide 06)

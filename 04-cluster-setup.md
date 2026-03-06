@@ -56,6 +56,38 @@ Verify the cluster is running:
 pvecm status
 ```
 
+**Expected output:**
+```
+Cluster information
+-------------------
+Name:             homelab-cluster
+Config Version:   1
+Transport:        knet
+Secure auth:      on
+
+Quorum information
+------------------
+Date:             ...
+Quorum provider:  corosync_votequorum
+Nodes:            1
+Node ID:          0x00000001
+Ring ID:          1.8
+Quorate:          Yes
+
+Votequorum information
+----------------------
+Expected votes:   1
+Highest expected: 1
+Total votes:      1
+Quorum:           1
+Flags:            Quorate
+
+Membership information
+----------------------
+    Nodeid      Votes Name
+0x00000001          1 pve1 (local)
+```
+
 With only 1 node, `Expected votes: 1` and `Quorate: Yes` is correct.
 
 ---
@@ -64,7 +96,7 @@ With only 1 node, `Expected votes: 1` and `Quorate: Yes` is correct.
 
 ### Option A: Via Web UI (Easiest)
 
-1. Open the Proxmox web UI for pve2: `https://192.168.1.102:8006`
+1. Open the Proxmox web UI for pve2: `https://192.168.1.12:8006`
 2. Go to **Datacenter** → **Cluster** → **Join Cluster**
 3. On pve1, go to **Datacenter** → **Cluster** → **Join Information**
 4. Copy the join information from pve1 and paste it into the pve2 join dialog
@@ -77,8 +109,11 @@ With only 1 node, `Expected votes: 1` and `Quorate: Yes` is correct.
 SSH into pve2, then run:
 
 ```bash
-pvecm add 192.168.1.101 --link0 10.10.10.2
+pvecm add 192.168.1.11 --link0 10.10.10.2
 ```
+
+- `192.168.1.11` — management IP of pve1 (used to fetch cluster config)
+- `--link0 10.10.10.2` — pve2's VLAN 10 IP for cluster traffic
 
 You'll be prompted for pve1's root password. Enter it.
 
@@ -88,6 +123,8 @@ You'll be prompted for pve1's root password. Enter it.
 pvecm status
 ```
 
+You should now see `Nodes: 2` and both nodes in the membership list.
+
 ---
 
 ## Step 3: Join pve3 to the Cluster
@@ -95,8 +132,10 @@ pvecm status
 SSH into pve3, then run:
 
 ```bash
-pvecm add 192.168.1.101 --link0 10.10.10.3
+pvecm add 192.168.1.11 --link0 10.10.10.3
 ```
+
+Enter pve1's root password when prompted.
 
 Wait 30 seconds, then verify from any node:
 
@@ -104,7 +143,36 @@ Wait 30 seconds, then verify from any node:
 pvecm status
 ```
 
-**Expected final output confirms:**
+**Expected final output:**
+```
+Cluster information
+-------------------
+Name:             homelab-cluster
+Config Version:   3
+Transport:        knet
+Secure auth:      on
+
+Quorum information
+------------------
+Nodes:            3
+Quorate:          Yes
+
+Votequorum information
+----------------------
+Expected votes:   3
+Highest expected: 3
+Total votes:      3
+Quorum:           2
+
+Membership information
+----------------------
+    Nodeid      Votes Name
+0x00000001          1 pve1 (local)
+0x00000002          1 pve2
+0x00000003          1 pve3
+```
+
+Key things to confirm:
 - `Nodes: 3`
 - `Quorate: Yes`
 - `Expected votes: 3`
@@ -114,7 +182,9 @@ pvecm status
 
 ## Step 4: Verify in the Web UI
 
-Open `https://192.168.1.101:8006`. In the left panel under **Datacenter**, you should see all 3 nodes:
+Open `https://192.168.1.11:8006` (pve1's web UI — but now it's the cluster UI).
+
+In the left panel under **Datacenter**, you should see all 3 nodes:
 ```
 Datacenter (homelab-cluster)
 ├── pve1
@@ -122,19 +192,46 @@ Datacenter (homelab-cluster)
 └── pve3
 ```
 
+Clicking on each node shows its individual resources. Clicking on **Datacenter** at the top shows cluster-wide views.
+
 > **Note**: After joining, you only need to open one node's web UI — all 3 nodes are visible and manageable from any single node's interface.
 
 ---
 
 ## Step 5: Verify Node Health
 
+Run on any node:
+
 ```bash
 pvecm nodes
+```
+
+```
+Membership information
+----------------------
+    Nodeid      Votes Quorum_votes Name
+         1          1            1 pve1 (local)
+         2          1            0 pve2
+         3          1            0 pve3
+```
+
+Also check no errors:
+
+```bash
 systemctl status corosync
 systemctl status pve-cluster
 ```
 
-Both services should show `active (running)`.
+Both should show `active (running)`.
+
+---
+
+## Understanding Cluster Storage of Config
+
+Once clustered, `/etc/pve/` becomes a distributed filesystem shared across all nodes (using PMXCFS, the Proxmox cluster filesystem). This means:
+- VM configurations created on any node are visible on all nodes
+- Cluster-wide users, permissions, and storage definitions are in sync automatically
+- If a node goes offline, its config is still readable from the surviving nodes
 
 ---
 
@@ -148,11 +245,18 @@ systemctl status corosync
 
 **Quorum lost (only 1 or 2 nodes up after testing)**
 
+If you deliberately shut down nodes for testing and the cluster loses quorum:
 ```bash
 pvecm expected 1   # temporarily override quorum to 1 node
-# undo before bringing nodes back:
+```
+This is for maintenance only — **undo it** before bringing nodes back:
+```bash
 pvecm expected 3
 ```
+
+**Wrong link IP used during join**
+
+You can update the corosync link config in `/etc/pve/corosync.conf` — but be careful, as cluster config is shared. Ask on the [Proxmox forum](https://forum.proxmox.com) if unsure.
 
 ---
 

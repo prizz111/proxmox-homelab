@@ -92,14 +92,14 @@ For **pve1**:
 |---|---|
 | Management Interface | `eno1` (the Intel Ethernet port) |
 | Hostname (FQDN) | `pve1.homelab.local` |
-| IP Address | `192.168.1.101/24` (enter with the `/24` suffix) |
+| IP Address | `192.168.1.11/24` (enter with the `/24` suffix) |
 | Netmask | `24` (CIDR prefix — **not** `255.255.255.0`) |
-| Gateway | `192.168.1.1` (your router's IP) |
-| DNS Server | `192.168.1.1` (your router, or use `1.1.1.1`) |
+| Gateway | `192.168.1.254` (AT&T gateway address) |
+| DNS Server | `8.8.8.8` (Google DNS — router DNS unreliable) |
 
-> **Note**: The installer expects the netmask as a CIDR prefix number (`24`), not dotted decimal (`255.255.255.0`). Some versions of the installer combine the IP and mask into one field — if so, enter `192.168.1.101/24`.
+> **Note**: The installer expects the netmask as a CIDR prefix number (`24`), not dotted decimal (`255.255.255.0`). Some versions of the installer combine the IP and mask into one field — if so, enter `192.168.1.11/24`.
 >
-> **To confirm your subnet**: Run `ipconfig` on your Windows PC and note the Subnet Mask under your active adapter. `255.255.255.0` = `/24`. Adjust `192.168.1.1` if your AT&T gateway uses a different subnet.
+> **To confirm your subnet**: Run `ipconfig` on your Windows PC and note the Subnet Mask under your active adapter. `255.255.255.0` = `/24`.
 
 **Summary screen** → Review everything, then click **Install**
 
@@ -114,7 +114,7 @@ After reboot, the HP EliteDesk will boot into Proxmox. You'll see a text console
 ```
 Welcome to the Proxmox Virtual Environment.
 Please use your web browser to configure this server -
-connect to: https://192.168.1.101:8006/
+connect to: https://192.168.1.11:8006/
 ```
 
 You can now remove the USB drive.
@@ -127,11 +127,11 @@ You can now remove the USB drive.
 
 From any computer on your home network:
 
-1. Open a browser and go to `https://192.168.1.101:8006`
+1. Open a browser and go to `https://192.168.1.11:8006`
 2. You'll get a **SSL certificate warning** — this is normal (Proxmox uses a self-signed cert by default). Click **Advanced** → **Proceed** (or equivalent in your browser)
 3. Log in with:
    - Username: `root`
-   - Password: (the one you set during install)
+   - Password: `password`
    - Realm: `Linux PAM standard authentication`
 4. You'll see the Proxmox dashboard. You'll also see a **"No valid subscription"** warning — click OK to dismiss it (more on this below)
 
@@ -180,11 +180,13 @@ Repeat Steps 3–6 for pve2 and pve3, **using different IPs and hostnames**:
 
 **For pve2:**
 - Hostname: `pve2.homelab.local`
-- IP Address: `192.168.1.102/24`
+- IP Address: `192.168.1.12/24`
 
 **For pve3:**
 - Hostname: `pve3.homelab.local`
-- IP Address: `192.168.1.103/24`
+- IP Address: `192.168.1.13/24`
+
+Use the same Gateway (`192.168.1.254`) and DNS (`8.8.8.8`) as pve1.
 
 Use the same root password on all 3 nodes (required for cluster joining later).
 
@@ -194,9 +196,9 @@ Use the same root password on all 3 nodes (required for cluster joining later).
 
 After all 3 nodes are installed:
 
-- [ ] `https://192.168.1.101:8006` loads Proxmox web UI for pve1
-- [ ] `https://192.168.1.102:8006` loads Proxmox web UI for pve2
-- [ ] `https://192.168.1.103:8006` loads Proxmox web UI for pve3
+- [ ] `https://192.168.1.11:8006` loads Proxmox web UI for pve1
+- [ ] `https://192.168.1.12:8006` loads Proxmox web UI for pve2
+- [ ] `https://192.168.1.13:8006` loads Proxmox web UI for pve3
 - [ ] All 3 nodes show up-to-date after `apt update && apt full-upgrade`
 - [ ] No-subscription repo is active (no errors on `apt update`)
 
@@ -213,4 +215,4 @@ After all 3 nodes are installed:
 
 ## Next Step
 
-Proceed to [03.1 - Switch Setup](03.1-switch-setup.md) to set up your UniFi Flex Mini before configuring the network.
+Proceed to [03 - Network Configuration](03-network-config.md) to set up your managed switch VLANs before forming the cluster.
